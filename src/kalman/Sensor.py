@@ -1,51 +1,60 @@
-# A sensor gives the user a white noised measurement based on 
+# A sensor gives the user a white noised measurement based on
 # its actual (carthesian) position in the world at time t
 
 from enum import Enum
-from numpy import array, ndarray, subtract, add, degrees, arctan2, arccos
+from numpy import array, ndarray, subtract, add, degrees, arctan2, arccos, dtype, empty_like, int32, mod
 from numpy.random import standard_normal
 from numpy.linalg import norm
+
 
 class SensorType(Enum):
     Polar = 1
     Carthesian = 2
 
+
 class Sensor(object):
-    def __init__(self, position: array, sensor_type: SensorType) -> None:
+    def __init__(self, position: array, sensor_type: SensorType, objectsCoordinates: ndarray) -> None:
         self.position: array = position
         self.type: SensorType = sensor_type
+        self.objectsCoordinates: ndarray = objectsCoordinates
+        self.measured_coordinates: ndarray = empty_like(self.objectsCoordinates)
 
-    def __random_scan(self, coordinates: array) -> array:
-        return add(coordinates, standard_normal(size=coordinates.size()))
+    def __add_white_noise(self, coordinates: array) -> array:
+        return add(coordinates, standard_normal(size=coordinates.size)*1000)
 
-    def __scan(self, coordinates: array) -> array:
-        # Add some white noise to the coordinates
-        scan: array = self.__random_scan(coordinates)
+    def scan(self, time: int32) -> array:
+        # Simulate that a sensor only updates at a certain frequency
+        if mod(time, 10) != 0:
+            return
 
-        # calculate egocentrical (carthesian) coordinates
-        pos: array = subtract(scan, self.position)
+        # Empty array so we work on fresh data
+        self.measured_coordinates: ndarray = empty_like(self.objectsCoordinates)
 
-        if self.type == SensorType.Polar:
-            # polar coors are given as: [r, theta, phi]
-            # r := |vector|
-            # theta := azimuth
-            # phi := polar angle (N/A in 2D)
+        # Measure all objects in the world
+        for i, coordinate in enumerate(self.objectsCoordinates):
+            # Add some white noise to the coordinates and then
+            # calculate egocentrical (carthesian) coordinates
+            pos: array = subtract(self.__add_white_noise(coordinate), self.position)
 
-            r: float = norm(pos)
-            theta: float = degrees(arctan2(pos[1], pos[0]))
+            if self.type == SensorType.Polar:
+                # polar coords are given as: [r, theta, phi]
+                # r := |vector|
+                # theta := azimuth
+                # phi := polar angle (N/A in 2D)
 
-            if coordinates.size() == 2:
-                return array([r, theta])
+                r: float = norm(pos)
+                theta: float = degrees(arctan2(pos[1], pos[0]))
 
-            if coordinates.size() == 3:
-                phi = degrees(arccos(pos[2]/r))
-                return array([r, theta, phi])
+                if coordinate.len() == 2:
+                    self.measured_coordinates[i] = array([r, theta])
 
-            raise IndexError()
+                if coordinate.len() == 3:
+                    phi = degrees(arccos(pos[2]/r))
+                    self.measured_coordinates[i] = array([r, theta, phi])
 
-        if self.type == SensorType.Carthesian:
-            return pos
+                raise IndexError()
 
-    def full_scan(self, coordinatesList : ndarray) -> ndarray:
-        for coordinate in coordinatesList:
-            yield self.__scan(coordinate)
+            if self.type == SensorType.Carthesian:
+                self.measured_coordinates[i] = pos
+        
+        return self.measured_coordinates
