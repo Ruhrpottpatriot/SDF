@@ -7,8 +7,6 @@ import matplotlib.pyplot as plt
 
 class World(object):
     def __init__(self) -> None:
-
-
         # Create time steps array
         self.timeSteps = arange(0, (400/3) * pi, 1)
 
@@ -19,17 +17,17 @@ class World(object):
 
         # Create a single sensor
         self.sensors: array = empty(1, dtype=object)
-        self.sensors[0] = Sensor([0, 0], SensorType.Carthesian, self.trajectories)
+        self.sensors[0] = Sensor(
+            [0, 0], SensorType.Carthesian, self.trajectories)
 
         # Create a new KalmanFilter
         self.filter: KalmanFilter = KalmanFilter(self.sensors)
 
         # Run filter for each timestep
-        for i, timestep in enumerate(self.timeSteps):
-            self.filter.predict(timestep)
-            self.filter.filter(timestep)
-            self.filter.retrodict(timestep)
-
+        for _, timestep in enumerate(self.timeSteps):
+            predCoord = self.filter.predict(timestep)
+            filterCoord = self.filter.filter(timestep)
+            retrodictCoord = self.filter.retrodict(timestep)
 
         # Make measurement
         for i, sensor in enumerate(self.sensors):
@@ -41,8 +39,10 @@ class World(object):
                     scan = sensor.full_scan([position])
                     plt.scatter(*zip(*scan))
 
-        
-        plt.show()           
+        plt.show()
+
+    def get_real_trajectory(self):
+        return self.trajectories
 
     def __calculate_trajectory(self) -> ndarray:
         amplitude = power(300, 2) / 9
