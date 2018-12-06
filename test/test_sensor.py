@@ -70,7 +70,7 @@ class TestSensor(unittest.TestCase):
         polarCoord = [r, theta]
 
         seed(0)
-        (pos, new) = Sensor([0,0],SensorType.Polar, [[[0,0]]]).scan(0)
+        (pos, new) = Sensor([0,0], SensorType.Polar, [[[0,0]]]).scan(0)
         self.assertTrue(new)
         self.assertEqual(len(pos), 1)
         self.assertTrue(allclose(pos, polarCoord))   
