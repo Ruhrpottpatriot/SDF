@@ -44,16 +44,18 @@ class World(object):
         for _, timestep in enumerate(self.timeSteps):
             self.filter.predict()
 
-            (scan, isNew) = self.sensors[0].scan(timestep)            
+            color = ''
+            (scan, isNew) = self.sensors[0].scan(timestep)    
             if isNew:
                 self.filter.filter(scan)
-                lastState = self.filter.States[-1]
-                plt.plot(lastState[0,0], lastState[1,0], 'g+')
-                self.filter.retrodict()
+                color = 'g'
             else:
-                lastState = self.filter.States[-1]
-                plt.plot(lastState[0,0], lastState[1,0], 'r+')
+                color = 'r'
                 
+            lastState = self.filter.States[-1]
+            plt.plot(lastState[0,0], lastState[1,0], color=color, marker='+')
+            # Plot ellipse
+
         plt.show()
 
 
