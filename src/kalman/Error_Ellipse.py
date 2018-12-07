@@ -16,12 +16,3 @@ class error_ellipse():
 
         return array((add((V[0] * sqrt(D[0][0])) * transpose(cos(t[:])), ny[0]),
                       add((V[1] * sqrt(D[1][1])) * transpose(sin(t[:])), ny[1])))
-
-
-# test
-state = vstack(([[10000], [10000]], [[0], [0]], [[0], [0]]))
-Cov = hstack((vstack((250 * eye(2), zeros((2, 2)), zeros((2, 2)))), vstack((zeros((2, 2)), 300 * eye(2), zeros((2, 2)))), vstack((zeros((2, 2)), zeros((2, 2)), 300 * eye(2)))))
-
-a = error_ellipse.calculate_ellipse(state, Cov)
-plt.plot(a[0], a[1])
-plt.show()
