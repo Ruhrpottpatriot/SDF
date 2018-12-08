@@ -2,7 +2,7 @@ from numpy import array, ndarray,shape, ones, empty, empty_like, arange, pi, pow
 from kalman.sensor import Sensor, SensorType
 from kalman.filter import KalmanFilter
 from numpy.random import standard_normal
-from kalman.Error_Ellipse import calculate_ellipse
+from kalman.ellipse import error_ellipse
 
 import matplotlib.pyplot as plt
 
@@ -56,7 +56,7 @@ class World(object):
             lastState = self.filter.States[-1]
             plt.plot(lastState[0,0], lastState[1,0], color=color, marker='+')
             # Plot ellipse
-            a = calculate_ellipse(self.filter.States[-1], self.filter.Covariances[-1])
+            a = error_ellipse.calculate_ellipse(self.filter.States[-1], self.filter.Covariances[-1])
             plt.plot(a[0], a[1])
 
         plt.show()
