@@ -9,16 +9,16 @@ class KalmanFilter(object):
         self.Covariances: ndarray = array([initialCovariance])
 
         q_max: float = 9.1367
-        d_t: float = 5.0
-        theta: float = 60.0
-        sigma: float = 50.0
+        d_t: float = 0.2        # was 1 before 
+        theta: float = 30.0     # was 60 before
+        sigma: float = 25.0     # was 50 before
 
         Id: ndarray = identity(dim)
         Null: ndarray = zeros((dim, dim))  
 
         # state transition
         self.F = vstack((
-            hstack((Id, Id*5, Id*(square(d_t))*0.5)),
+            hstack((Id, Id*d_t, Id*(square(d_t))*0.5)),
             hstack((Null, Id, Id*d_t)),
             hstack((Null, Null, Id*exp((-d_t)/theta)))
         ))
@@ -58,7 +58,7 @@ class KalmanFilter(object):
         for i in range(rangeCount):
             pred_P: ndarray = add(matmul(self.F, matmul(self.Covariances[-(i+2)], transpose(self.F))), self.D)
             pred_X: ndarray = matmul(self.F, self.States[-(i+2)])
-            W: ndarray = matmul(self.Covariances[-(i+2)], matmul(self.F, inv(pred_P)))
+            W: ndarray = matmul(self.Covariances[-(i+2)], matmul(transpose(self.F), inv(pred_P)))
 
             self.States[-(i+2)] = add(self.States[-(i+2)], matmul(W, subtract(self.States[-(i+1)], pred_X)))                        
             self.Covariances[-(i+2)] = add(self.Covariances[-(i+2)], matmul(W, matmul(subtract(self.Covariances[-(i+1)], pred_P), transpose(W))))
