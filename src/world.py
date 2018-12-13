@@ -29,15 +29,15 @@ class World(object):
         Null: ndarray = zeros((dim, dim))
 
         covariance = vstack((
-            hstack((50**2 * Id, Null, Null)),
-            hstack((Null, (300**2) * Id, Null)),
+            hstack((10**2 * Id, Null, Null)),   # was 50 before
+            hstack((Null, (20**2) * Id, Null)), # was 300 before
             hstack((Null, Null, (9**2) * Id))
         ))   
 
         state = vstack((
             dot(hstack((Id, Null, Null)), sum(KalmanFilter.get_state_at_time(0), 50 * standard_normal((dim*3, 1)))),
-            ones((dim, 1)),
-            ones((dim, 1))
+            zeros((dim, 1)),
+            zeros((dim, 1))
         ))
         self.filter: KalmanFilter = KalmanFilter(state, covariance)
 
@@ -46,18 +46,36 @@ class World(object):
             self.filter.predict()
 
             color = ''
+            linestyle = ''
             (scan, isNew) = self.sensors[0].scan(timestep)    
             if isNew:
-                self.filter.filter(scan)
+                self.filter.filter(scan)          
                 color = 'g'
+                linestyle = 'solid'
             else:
                 color = 'r'
+                linestyle = 'dotted'
+                               
+            # Plot error elipse
+            a = error_ellipse.calculate_ellipse(self.filter.States[-1], self.filter.Covariances[-1])
+            plt.plot(a[0], a[1], color = color, linestyle = linestyle)
                 
+            # Plot position
             lastState = self.filter.States[-1]
             plt.plot(lastState[0,0], lastState[1,0], color=color, marker='+')
-            # Plot ellipse
-            a = error_ellipse.calculate_ellipse(self.filter.States[-1], self.filter.Covariances[-1])
-            plt.plot(a[0], a[1])
+
+            if isNew:
+                self.filter.retrodict()
+
+        # Finished, print retrodiction
+        for i in range(self.filter.States.shape[0]):
+            state = self.filter.States[i,:,:]
+            cov = self.filter.Covariances[i,:,:]
+            plt.plot(state[0,0], state[1,0], color = 'k', marker = '+')
+
+            e = error_ellipse.calculate_ellipse(state, cov)
+            plt.plot(e[0], e[1], color = 'k', linestyle = '--')
+
 
         plt.show()
 
@@ -67,7 +85,7 @@ class World(object):
 
     def __calculate_trajectory(self) -> ndarray:
         amplitude = power(300, 2) / 9
-        w = 9 / (2*300)
+        w = 9 / (2 * 300)
 
         trajectory: ndarray = empty((shape(self.timeSteps)[0], 2, 1))
         for i, t in enumerate(self.timeSteps):
