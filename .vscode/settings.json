@@ -1,4 +1,3 @@
 {
-    "python.pythonPath": "C:\\Users\\Robert\\Anaconda3\\python.exe",
-    "python.linting.enabled": true
+    "FSharp.fsacRuntime": "netcore"
 }
